@@ -1,0 +1,9 @@
+{
+  "name": "Copy of ScissHER",
+  "description": "The high-fashion, intentional dating space for lesbians. Availability-based matching and prismatic interaction design.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
