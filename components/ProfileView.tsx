@@ -1,15 +1,32 @@
 
 import React, { useState } from 'react';
 import { User } from '../types';
+import { Browser } from '@capacitor/browser';
 
 const ProfileView: React.FC<{ user: User | null, onReset: () => void }> = ({ user, onReset }) => {
   const [showSafety, setShowSafety] = useState(false);
 
   if (!user) return null;
 
-  const handleLegalLink = (type: string) => {
-    // In production, use Browser.open({ url: '...' }) from @capacitor/browser
-    alert(`Opening ScissHER ${type}... In production, this links to your website policy page.`);
+  const handleLegalLink = async (type: string) => {
+    // Map legal document types to URLs
+    const urlMap: Record<string, string> = {
+      'Community Guidelines': 'https://scissher.app/community-guidelines',
+      'Privacy Policy': 'https://scissher.app/privacy-policy',
+      'Terms of Service (EULA)': 'https://scissher.app/terms-of-service',
+      'Neural Content Security': 'https://scissher.app/content-security'
+    };
+    
+    const url = urlMap[type];
+    if (url) {
+      try {
+        await Browser.open({ url });
+      } catch (e) {
+        // Fallback for browser environment
+        console.log('Browser plugin not available, opening in window:', e);
+        window.open(url, '_blank');
+      }
+    }
   };
 
   const handleDeleteAccount = () => {

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { User } from '../types';
 import { RoseIcon } from './Header';
+import { Browser } from '@capacitor/browser';
 
 interface UserProfileModalProps {
   user: User;
@@ -22,6 +23,16 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
   const handleReport = () => {
     alert(`Report submitted for ${user.name}. Our safety team will review this within 24 hours.`);
     onClose();
+  };
+
+  const handleSocialLink = async (url: string) => {
+    try {
+      await Browser.open({ url });
+    } catch (e) {
+      // Fallback for browser environment
+      console.log('Browser plugin not available, opening in window:', e);
+      window.open(url, '_blank');
+    }
   };
 
   return (
@@ -71,6 +82,35 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
               "{user.bio}"
             </p>
           </div>
+
+          {user.socialLinks && user.socialLinks.length > 0 && (
+            <div className="space-y-4 px-2">
+              <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] flex items-center gap-3">
+                <div className="w-6 h-6 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-500">
+                  <i className="fa-solid fa-share-nodes text-[10px]"></i>
+                </div>
+                Social Links
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                {user.socialLinks.map((link, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSocialLink(link.url)}
+                    className="flex items-center gap-2 px-5 py-3 bg-slate-900/50 border border-white/10 rounded-full hover:bg-slate-800/70 hover:border-white/20 transition-all active:scale-95"
+                  >
+                    <i className={`fa-brands fa-${link.platform.toLowerCase()} text-sm ${
+                      link.platform === 'Instagram' ? 'text-pink-400' :
+                      link.platform === 'TikTok' ? 'text-cyan-400' :
+                      link.platform === 'Twitter' ? 'text-blue-400' :
+                      link.platform === 'LinkedIn' ? 'text-blue-500' :
+                      'text-slate-400'
+                    }`}></i>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">{link.username}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-6">
             <div className="flex bg-slate-900/50 p-1.5 rounded-[2.5rem] border border-white/5 mx-2">
