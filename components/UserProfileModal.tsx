@@ -26,12 +26,20 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
   };
 
   const handleSocialLink = async (url: string) => {
+    // Validate URL before opening
+    if (!url || !url.startsWith('https://')) {
+      alert('Invalid link');
+      return;
+    }
+    
     try {
       await Browser.open({ url });
     } catch (e) {
       // Fallback for browser environment
-      console.log('Browser plugin not available, opening in window:', e);
-      window.open(url, '_blank');
+      const newWindow = window.open(url, '_blank');
+      if (!newWindow) {
+        alert('Please allow popups to open this link');
+      }
     }
   };
 
@@ -92,10 +100,11 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
                 Social Links
               </h4>
               <div className="flex flex-wrap gap-3">
-                {user.socialLinks.map((link, index) => (
+                {user.socialLinks.map((link) => (
                   <button
-                    key={index}
+                    key={`${link.platform}-${link.username}`}
                     onClick={() => handleSocialLink(link.url)}
+                    aria-label={`Open ${link.platform} profile for ${link.username}`}
                     className="flex items-center gap-2 px-5 py-3 bg-slate-900/50 border border-white/10 rounded-full hover:bg-slate-800/70 hover:border-white/20 transition-all active:scale-95"
                   >
                     <i className={`fa-brands fa-${link.platform.toLowerCase()} text-sm ${

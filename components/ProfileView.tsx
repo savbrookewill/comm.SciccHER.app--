@@ -18,13 +18,15 @@ const ProfileView: React.FC<{ user: User | null, onReset: () => void }> = ({ use
     };
     
     const url = urlMap[type];
-    if (url) {
+    if (url && url.startsWith('https://')) {
       try {
         await Browser.open({ url });
       } catch (e) {
         // Fallback for browser environment
-        console.log('Browser plugin not available, opening in window:', e);
-        window.open(url, '_blank');
+        const newWindow = window.open(url, '_blank');
+        if (!newWindow) {
+          alert('Please allow popups to open this link');
+        }
       }
     }
   };
@@ -137,6 +139,7 @@ const ProfileView: React.FC<{ user: User | null, onReset: () => void }> = ({ use
                  <button 
                   key={item.id} 
                   onClick={() => handleLegalLink(item.t)}
+                  aria-label={`View ${item.t}`}
                   className="w-full py-6 px-8 glass rounded-[2.25rem] text-left text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 border-white/5 flex justify-between items-center hover:bg-white/5 hover:text-white transition-all active:scale-[0.98]">
                    {item.t} <i className="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-40"></i>
                  </button>
