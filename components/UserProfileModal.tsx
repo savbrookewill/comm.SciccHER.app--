@@ -25,21 +25,26 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
     onClose();
   };
 
-  const handleSocialLink = async (url: string) => {
-    // Validate URL before opening
-    if (!url || !url.startsWith('https://')) {
-      alert('Invalid link');
-      return;
-    }
-    
+  const handleSocialLink = async (urlString: string) => {
+    // Validate URL format and protocol
     try {
-      await Browser.open({ url });
-    } catch (e) {
-      // Fallback for browser environment
-      const newWindow = window.open(url, '_blank');
-      if (!newWindow) {
-        alert('Please allow popups to open this link');
+      const url = new URL(urlString);
+      if (url.protocol !== 'https:') {
+        alert('Invalid link protocol');
+        return;
       }
+      
+      try {
+        await Browser.open({ url: urlString });
+      } catch (e) {
+        // Fallback for browser environment
+        const newWindow = window.open(urlString, '_blank');
+        if (!newWindow) {
+          alert('Please allow popups to open this link');
+        }
+      }
+    } catch (e) {
+      alert('Invalid link format');
     }
   };
 

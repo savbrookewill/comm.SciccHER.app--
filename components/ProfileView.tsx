@@ -17,17 +17,28 @@ const ProfileView: React.FC<{ user: User | null, onReset: () => void }> = ({ use
       'Neural Content Security': 'https://scissher.app/content-security'
     };
     
-    const url = urlMap[type];
-    if (url && url.startsWith('https://')) {
+    const urlString = urlMap[type];
+    if (!urlString) return;
+    
+    // Validate URL format and protocol
+    try {
+      const url = new URL(urlString);
+      if (url.protocol !== 'https:') {
+        alert('Invalid link protocol');
+        return;
+      }
+      
       try {
-        await Browser.open({ url });
+        await Browser.open({ url: urlString });
       } catch (e) {
         // Fallback for browser environment
-        const newWindow = window.open(url, '_blank');
+        const newWindow = window.open(urlString, '_blank');
         if (!newWindow) {
           alert('Please allow popups to open this link');
         }
       }
+    } catch (e) {
+      alert('Invalid link format');
     }
   };
 
