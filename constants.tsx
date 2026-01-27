@@ -44,8 +44,8 @@ export const MOCK_USERS: User[] = [
     isPremium: false,
     speedDatingTickets: 1,
     socialLinks: [
-      { platform: 'Instagram', username: '@maya.creates', url: '#' },
-      { platform: 'TikTok', username: '@maya_cooks', url: '#' }
+      { platform: 'Instagram', username: '@maya.creates', url: 'https://instagram.com/maya.creates' },
+      { platform: 'TikTok', username: '@maya_cooks', url: 'https://tiktok.com/@maya_cooks' }
     ]
   },
   {
@@ -89,8 +89,8 @@ export const MOCK_USERS: User[] = [
     isPremium: true,
     speedDatingTickets: 999,
     socialLinks: [
-      { platform: 'LinkedIn', username: 'elena-dev', url: '#' },
-      { platform: 'Twitter', username: '@elena_codes', url: '#' }
+      { platform: 'LinkedIn', username: 'elena-dev', url: 'https://linkedin.com/in/elena-dev' },
+      { platform: 'Twitter', username: '@elena_codes', url: 'https://twitter.com/elena_codes' }
     ]
   },
   {
