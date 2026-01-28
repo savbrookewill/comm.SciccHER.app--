@@ -1,6 +1,6 @@
 {
-  "name": "Copy of ScissHER",
-  "description": "The high-fashion, intentional dating space for lesbians. Availability-based matching and prismatic interaction design.",
+  "name": "ScissHER",
+  "description": "The high-fashion, intentional dating space for lesbians. Featuring Virtual Blind Dating and metropolitan event grounding.",
   "requestFramePermissions": [
     "camera",
     "microphone",

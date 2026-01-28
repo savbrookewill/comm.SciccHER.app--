@@ -11,7 +11,6 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin, onCreateAccount }) => {
   const [tapCount, setTapCount] = useState(0);
 
   const handleLogoTap = () => {
-    // Hidden reviewer bypass: Tap the logo 7 times to reveal "Reviewer Mode"
     setTapCount(prev => prev + 1);
   };
 
@@ -27,7 +26,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin, onCreateAccount }) => {
           <NormalScissorsIcon className="w-16 h-16 drop-shadow-[0_0_12px_white]" color="white" />
         </div>
         <div className="text-center space-y-4">
-          <h1 className="text-6xl font-black tracking-tighter text-white italic leading-tight">
+          <h1 className="text-7xl font-black tracking-tighter text-white italic leading-tight">
             <span className="shimmer-text">ScissHER</span>
           </h1>
           <p className="text-[11px] font-black uppercase tracking-[0.6em] text-rose-400 italic">Intentional Space</p>
@@ -45,32 +44,26 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin, onCreateAccount }) => {
           
           <button 
             onClick={onLogin}
-            className="w-full py-4 glass border border-white/10 rounded-[2rem] font-black text-[9px] uppercase tracking-[0.3em] text-slate-500 hover:text-white transition-all active:scale-95"
+            className="w-full py-5 glass border border-white/10 rounded-[2.25rem] font-black text-[10px] uppercase tracking-[0.3em] text-slate-500 hover:text-white transition-all active:scale-95"
           >
-            Already Member? Identity Check
+            Identity Check
           </button>
 
-          {/* Hidden App Store Reviewer Button */}
           {tapCount >= 5 && (
             <button 
               onClick={onLogin}
               className="w-full py-4 bg-emerald-500/10 border border-emerald-500/30 rounded-[2rem] font-black text-[9px] uppercase tracking-[0.3em] text-emerald-400 animate-in fade-in zoom-in"
             >
               <i className="fa-solid fa-shield-check mr-2"></i>
-              Apple Reviewer Mode
+              Reviewer Access
             </button>
           )}
         </div>
 
-        <div className="text-center space-y-4 opacity-50">
-          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
-            20-30 Age Verification Required <br/> Zero-Tolerance Safety Protocol
+        <div className="text-center opacity-40">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-relaxed">
+            20-30 Verification Required <br/> Zero-Tolerance Safety Protocol
           </p>
-          <div className="flex justify-center gap-4 text-[7px] font-bold text-slate-600 uppercase tracking-widest">
-            <span className="underline">Terms</span>
-            <span className="underline">Privacy</span>
-            <span className="underline">EULA</span>
-          </div>
         </div>
       </div>
     </div>

@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
+import Header, { NormalScissorsIcon } from './components/Header';
 import Navigation from './components/Navigation';
 import DiscoveryView from './components/DiscoveryView';
 import SparksView from './components/SparksView';
 import CalendarView from './components/CalendarView';
-import EventsView from './components/EventsView';
 import ProfileView from './components/ProfileView';
 import VaultView from './components/VaultView';
 import LiveView from './components/LiveView';
+import EventsView from './components/EventsView';
 import AgeVerification from './components/AgeVerification';
 import AuthView from './components/AuthView';
 import PhotoOnboarding from './components/PhotoOnboarding';
@@ -18,7 +18,6 @@ import { AppView, User, AuthState } from './types';
 import { MOCK_USERS } from './constants';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
-import { NormalScissorsIcon } from './components/Header';
 
 const App: React.FC = () => {
   const [isAppLoading, setIsAppLoading] = useState(true);
@@ -32,24 +31,16 @@ const App: React.FC = () => {
   const [viewTransitioning, setViewTransitioning] = useState(false);
 
   useEffect(() => {
-    // Native iOS Polish
     const initNativeFeatures = async () => {
       try {
         await StatusBar.setStyle({ style: Style.Dark });
         await StatusBar.setOverlaysWebView({ overlay: true });
-      } catch (e) {
-        console.log('Native bridge not available in browser');
-      }
-      
-      // Simulate splash time
-      setTimeout(() => {
-        setIsAppLoading(false);
-      }, 2000);
+      } catch (e) {}
+      setTimeout(() => setIsAppLoading(false), 2200);
     };
     initNativeFeatures();
 
-    const isAuthorized = localStorage.getItem('scissher_verified');
-    if (isAuthorized === 'true') {
+    if (localStorage.getItem('scissher_verified') === 'true') {
       setAuthState('authorized');
     }
   }, []);
@@ -63,7 +54,7 @@ const App: React.FC = () => {
 
   const handleLike = async (id: string) => {
     setLikedUsers(prev => [...prev, id]);
-    if (Math.random() > 0.8) {
+    if (Math.random() > 0.85) {
       const found = MOCK_USERS.find(u => u.id === id);
       if (found) {
         try { await Haptics.notification({ type: NotificationType.Success }); } catch (e) {}
@@ -74,10 +65,10 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('scissher_verified');
-    setAuthState('landing');
-    setCurrentView('discovery');
+  const handleUpdateTickets = (count: number) => {
+    if (currentUser) {
+      setCurrentUser({ ...currentUser, speedDatingTickets: count });
+    }
   };
 
   const navigateTo = async (view: AppView) => {
@@ -87,20 +78,18 @@ const App: React.FC = () => {
     setTimeout(() => {
       setCurrentView(view);
       setViewTransitioning(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 200);
   };
 
-  // Splash Screen Logic
   if (isAppLoading) {
     return (
       <div className="fixed inset-0 bg-[#020617] flex flex-col items-center justify-center animate-in fade-in duration-1000">
-        <div className="w-32 h-32 petal-gradient rounded-[3rem] flex items-center justify-center animate-pulse shadow-[0_0_80px_rgba(251,113,133,0.3)]">
+        <div className="w-32 h-32 petal-gradient rounded-[3rem] flex items-center justify-center animate-pulse shadow-[0_0_80px_rgba(251,113,133,0.3)] border-2 border-white/20">
           <NormalScissorsIcon className="w-16 h-16" color="white" />
         </div>
-        <div className="mt-8 text-center space-y-2">
-          <h1 className="text-3xl font-black tracking-tighter shimmer-text italic">ScissHER</h1>
-          <p className="text-[8px] font-black uppercase tracking-[0.6em] text-slate-500">Entering The Scene...</p>
+        <div className="mt-10 text-center space-y-3">
+          <h1 className="text-4xl font-black tracking-tighter shimmer-text italic leading-none">ScissHER</h1>
+          <p className="text-[9px] font-black uppercase tracking-[0.6em] text-slate-500 animate-pulse">Entering The Scene...</p>
         </div>
       </div>
     );
@@ -114,11 +103,14 @@ const App: React.FC = () => {
     switch (currentView) {
       case 'discovery': return <DiscoveryView onLike={handleLike} />;
       case 'spark': return <SparksView likedUsers={likedUsers} onUpgrade={() => setShowPremium(true)} />;
+      case 'events': return <EventsView user={currentUser} onUpdateTickets={handleUpdateTickets} />;
       case 'calendar': return <CalendarView />;
-      case 'events': return <EventsView user={currentUser} onUpdateTickets={(c) => currentUser && setCurrentUser({...currentUser, speedDatingTickets: c})} />;
       case 'live': return <LiveView />;
-      case 'profile': return <ProfileView user={currentUser} onReset={handleLogout} />;
-      case 'vault': return <VaultView user={currentUser} onGrantAccess={(id) => {}} />;
+      case 'profile': return <ProfileView user={currentUser} onReset={() => {
+        localStorage.removeItem('scissher_verified');
+        setAuthState('landing');
+      }} />;
+      case 'vault': return <VaultView user={currentUser} onGrantAccess={() => {}} />;
       default: return <DiscoveryView onLike={handleLike} />;
     }
   };
@@ -126,54 +118,35 @@ const App: React.FC = () => {
   return (
     <div className="h-full bg-[#020617] text-slate-100 font-sans selection:bg-rose-500/30 flex flex-col overflow-hidden">
       <Header />
-      
       <main className={`flex-1 overflow-y-auto no-scrollbar max-w-md mx-auto w-full px-4 pt-4 pb-40 transition-all duration-300 ${viewTransitioning ? 'opacity-0 scale-95 blur-lg' : 'opacity-100 scale-100 blur-0'}`}>
         {renderView()}
       </main>
-
       <Navigation currentView={currentView} setView={navigateTo} />
-
       {matchUser && (
-        <div className="fixed inset-0 z-[500] bg-slate-950/98 backdrop-blur-3xl flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in duration-500">
+        <div className="fixed inset-0 z-[600] bg-slate-950/98 backdrop-blur-3xl flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in duration-500">
            <div className="absolute inset-0 petal-gradient opacity-20 animate-pulse"></div>
            <div className="relative z-10 text-center space-y-12 w-full max-w-xs">
               <div className="flex items-center justify-center -space-x-8">
-                 <div className="w-32 h-32 rounded-[2.5rem] border-4 border-white/20 shadow-2xl overflow-hidden -rotate-6">
+                 <div className="w-32 h-32 rounded-[2.5rem] border-4 border-white/20 shadow-2xl overflow-hidden -rotate-6 bg-slate-900">
                     <img src={currentUser?.mainPhoto} className="w-full h-full object-cover" />
                  </div>
-                 <div className="w-32 h-32 rounded-[2.5rem] border-4 border-rose-500 shadow-2xl overflow-hidden rotate-6 relative">
+                 <div className="w-32 h-32 rounded-[2.5rem] border-4 border-rose-500 shadow-2xl overflow-hidden rotate-6 relative bg-slate-900">
                     <img src={matchUser.mainPhoto} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-rose-500/10"></div>
                  </div>
               </div>
-
               <div className="space-y-4">
                 <h2 className="text-6xl font-black italic tracking-tighter shimmer-text leading-none">Electric Match</h2>
                 <p className="text-[10px] font-black uppercase tracking-[0.5em] text-rose-400">Atmospheric Connection Validated</p>
               </div>
-
-              <p className="text-sm font-medium italic text-slate-300 px-4">
-                You and {matchUser.name} have sparked an intentional scene.
-              </p>
-
+              <p className="text-sm font-medium italic text-slate-300 px-4">You and {matchUser.name} have sparked an intentional scene.</p>
               <div className="space-y-4 pt-4">
-                <button 
-                  onClick={() => {
-                    setMatchUser(null);
-                    navigateTo('calendar');
-                  }} 
-                  className="w-full py-6 shimmer-btn text-white rounded-[2.5rem] font-black text-xs uppercase tracking-[0.4em] shadow-2xl border border-white/30"
-                >
-                  Schedule Sesh
-                </button>
-                <button onClick={() => setMatchUser(null)} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                  Keep Exploring
-                </button>
+                <button onClick={() => { setMatchUser(null); navigateTo('calendar'); }} className="w-full py-6 shimmer-btn text-white rounded-[2.5rem] font-black text-xs uppercase tracking-[0.4em] shadow-2xl border border-white/30">Schedule Sesh</button>
+                <button onClick={() => setMatchUser(null)} className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Keep Exploring</button>
               </div>
            </div>
         </div>
       )}
-
       {showHype && <DailyHypeModal onClose={() => setShowHype(false)} />}
       {showPremium && <PremiumUpgradeModal onClose={() => setShowPremium(false)} />}
     </div>

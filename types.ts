@@ -36,8 +36,6 @@ export interface User {
   isPremium: boolean;
   speedDatingTickets: number;
   socialLinks?: SocialLink[];
-  isBlocked?: boolean;
-  isReported?: boolean;
 }
 
 export interface AvailabilitySlot {
@@ -45,21 +43,10 @@ export interface AvailabilitySlot {
   slots: string[];
 }
 
-export interface SeshRequest {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  day: string;
-  slot: string;
-  note: string;
-  status: 'pending' | 'accepted' | 'declined';
-  timestamp: number;
-}
-
 export interface DatingEvent {
   id: string;
   title: string;
-  type: 'Speed Dating' | 'Blind Date' | 'Mixer';
+  type: string;
   date: string;
   time: string;
   attendees: number;

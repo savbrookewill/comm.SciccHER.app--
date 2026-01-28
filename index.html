@@ -89,7 +89,6 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* iOS Grabber for sheets */
     .sheet-grabber {
       width: 36px;
       height: 5px;
@@ -98,20 +97,9 @@
       margin: 12px auto;
     }
 
-    /* Fix for iOS 100vh issue */
     .h-screen-ios {
       height: 100vh;
       height: -webkit-fill-available;
-    }
-
-    /* View Transitions */
-    .view-enter {
-      animation: view-enter 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-
-    @keyframes view-enter {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 <script type="importmap">
