@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,13 +72,11 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: shimmer 5s linear infinite;
-    }
-
-    .shimmer-btn {
-      background: linear-gradient(90deg, #fb7185, #a855f7, #6366f1, #fb7185);
-      background-size: 200% auto;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      animation: shimmer 4s linear infinite;
+      display: inline-block;
+      /* Prevent clipping of italicized characters (like the 'R' in ScissHER) */
+      padding-right: 0.3em;
+      margin-right: -0.3em;
+      vertical-align: bottom;
     }
 
     @keyframes shimmer {

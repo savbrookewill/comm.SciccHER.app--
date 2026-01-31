@@ -7,9 +7,10 @@ interface SeshRequestModalProps {
   onClose: () => void;
   onSubmit: (day: string, slot: string, note: string) => void;
   initialNote?: string;
+  groundingLinks?: any[];
 }
 
-const SeshRequestModal: React.FC<SeshRequestModalProps> = ({ user, onClose, onSubmit, initialNote = '' }) => {
+const SeshRequestModal: React.FC<SeshRequestModalProps> = ({ user, onClose, onSubmit, initialNote = '', groundingLinks = [] }) => {
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [note, setNote] = useState(initialNote);
@@ -49,8 +50,8 @@ const SeshRequestModal: React.FC<SeshRequestModalProps> = ({ user, onClose, onSu
         </div>
 
         <div className="space-y-10">
-          {initialNote && (
-            <div className="bg-rose-500/10 p-6 rounded-[2rem] border border-rose-500/20 space-y-3 animate-in slide-in-from-top-4 duration-500">
+          {(initialNote || groundingLinks.length > 0) && (
+            <div className="bg-rose-500/10 p-6 rounded-[2rem] border border-rose-500/20 space-y-4 animate-in slide-in-from-top-4 duration-500">
               <div className="flex items-center gap-2">
                 <i className="fa-solid fa-sparkles text-rose-400 text-[10px]"></i>
                 <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest">Scene Intel Suggestion</span>
@@ -58,6 +59,26 @@ const SeshRequestModal: React.FC<SeshRequestModalProps> = ({ user, onClose, onSu
               <p className="text-sm font-medium italic text-slate-200 leading-relaxed pr-4">
                 "{initialNote}"
               </p>
+              {groundingLinks.length > 0 && (
+                <div className="pt-2 flex flex-wrap gap-2">
+                  {groundingLinks.map((link, idx) => {
+                    const data = link.web || link.maps;
+                    if (!data) return null;
+                    return (
+                      <a 
+                        key={idx} 
+                        href={data.uri} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="text-[9px] font-black text-white bg-slate-900/50 border border-white/10 px-3 py-1.5 rounded-full hover:bg-rose-500/20 transition-colors flex items-center gap-2"
+                      >
+                        <i className={`fa-solid ${link.maps ? 'fa-location-dot' : 'fa-link'}`}></i>
+                        {data.title || "View Source"}
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 

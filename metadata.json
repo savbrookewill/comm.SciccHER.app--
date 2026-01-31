@@ -5,5 +5,10 @@
     "camera",
     "microphone",
     "geolocation"
-  ]
+  ],
+  "permissions": {
+    "camera": "ScissHER uses your camera for the 'Virtual Blind Sesh' video dates and to verify your identity during onboarding.",
+    "microphone": "ScissHER uses your microphone to enable real-time voice conversations during scheduled video Sesh sessions.",
+    "geolocation": "ScissHER uses your location to connect you with intentional partners in your city and suggest local metropolitan hotspots for dates."
+  }
 }

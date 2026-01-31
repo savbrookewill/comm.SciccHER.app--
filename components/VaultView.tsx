@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { User } from '../types';
 import { GoogleGenAI } from "@google/genai";
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { MOCK_USERS } from '../constants';
 
 interface VaultViewProps {
   user: User | null;
@@ -10,22 +11,39 @@ interface VaultViewProps {
 }
 
 const VaultView: React.FC<VaultViewProps> = ({ user }) => {
-  const [activeTab, setActiveTab] = useState<'public' | 'private'>('public');
+  const [activeTab, setActiveTab] = useState<'public' | 'private' | 'access'>('public');
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [editPrompt, setEditPrompt] = useState('');
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
   const [showKeyNeeded, setShowKeyNeeded] = useState(false);
 
+  // Mocking users who have requested or have access
+  const [accessPermissions, setAccessPermissions] = useState<Record<string, boolean>>({
+    'u2': true,
+    'u3': false
+  });
+
   if (!user) return null;
 
   const photos = activeTab === 'public' ? user.publicPhotos : user.privatePhotos;
+
+  const handleToggleAccess = async (userId: string) => {
+    const isGranted = accessPermissions[userId];
+    await Haptics.impact({ style: ImpactStyle.Medium });
+    setAccessPermissions(prev => ({
+      ...prev,
+      [userId]: !isGranted
+    }));
+    if (!isGranted) {
+      await Haptics.notification({ type: NotificationType.Success });
+    }
+  };
 
   const handleMagicEdit = async () => {
     if (!selectedPhoto || !editPrompt) return;
     setIsProcessing(true);
     try {
-      // Use standard Gemini 2.5 Flash for image edits
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
@@ -59,7 +77,6 @@ const VaultView: React.FC<VaultViewProps> = ({ user }) => {
   const handleAnimate = async () => {
     if (!selectedPhoto) return;
     
-    // Veo requires user-provided API key from a paid project
     const hasKey = await (window as any).aistudio?.hasSelectedApiKey();
     if (!hasKey) {
       setShowKeyNeeded(true);
@@ -68,7 +85,6 @@ const VaultView: React.FC<VaultViewProps> = ({ user }) => {
 
     setIsProcessing(true);
     try {
-      // Re-initialize to ensure we use the newly selected key
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       let operation = await ai.models.generateVideos({
@@ -111,7 +127,6 @@ const VaultView: React.FC<VaultViewProps> = ({ user }) => {
   const handleOpenKeyPicker = async () => {
     setShowKeyNeeded(false);
     await (window as any).aistudio?.openSelectKey();
-    // Proceed to animate assuming selection was successful (mitigating race condition)
     handleAnimate();
   };
 
@@ -131,26 +146,85 @@ const VaultView: React.FC<VaultViewProps> = ({ user }) => {
         </button>
         <button 
           onClick={() => setActiveTab('private')}
-          className={`flex-1 py-4 rounded-[2rem] text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === 'private' ? 'bg-rose-500/10 text-rose-400 shadow-xl' : 'text-slate-500'}`}
+          className={`flex-1 py-4 rounded-[2rem] text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === 'private' ? 'bg-slate-800 text-white shadow-xl' : 'text-slate-500'}`}
         >
-          <i className="fa-solid fa-lock text-[8px]"></i> Private
+          Private
+        </button>
+        <button 
+          onClick={() => setActiveTab('access')}
+          className={`flex-1 py-4 rounded-[2rem] text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === 'access' ? 'bg-rose-500/10 text-rose-400 shadow-xl' : 'text-slate-500'}`}
+        >
+          <i className="fa-solid fa-user-lock text-[8px]"></i> Access
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {photos.map((img, i) => (
-          <div 
-            key={i} 
-            onClick={() => setSelectedPhoto(img)}
-            className="relative aspect-square rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl group transition-all cursor-pointer active:scale-95"
-          >
-            <img src={img} alt="Vault item" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <i className="fa-solid fa-wand-magic-sparkles text-white text-2xl drop-shadow-lg"></i>
+      {activeTab !== 'access' ? (
+        <div className="grid grid-cols-2 gap-4">
+          {photos.map((img, i) => (
+            <div 
+              key={i} 
+              onClick={() => setSelectedPhoto(img)}
+              className="relative aspect-square rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl group transition-all cursor-pointer active:scale-95"
+            >
+              <img src={img} alt="Vault item" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <i className="fa-solid fa-wand-magic-sparkles text-white text-2xl drop-shadow-lg"></i>
+              </div>
+              {activeTab === 'private' && (
+                <div className="absolute top-4 left-4">
+                  <div className="bg-rose-500/80 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/20">
+                    <i className="fa-solid fa-lock text-[8px] text-white"></i>
+                    <span className="text-[8px] font-black text-white uppercase tracking-widest">Vaulted</span>
+                  </div>
+                </div>
+              )}
             </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
+          <div className="glass p-8 rounded-[3rem] border-white/10 space-y-4">
+            <h3 className="text-xl font-black text-white italic tracking-tighter">Private Access Keys</h3>
+            <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">
+              Grant exclusive "Keys" to your private gallery for intentional connections. Access can be revoked instantly.
+            </p>
           </div>
-        ))}
-      </div>
+
+          <div className="space-y-4">
+            {MOCK_USERS.filter(u => u.id !== user.id).map(u => {
+              const hasAccess = accessPermissions[u.id];
+              return (
+                <div key={u.id} className="glass p-5 rounded-[2.5rem] flex items-center justify-between border-white/5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10">
+                      <img src={u.mainPhoto} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-white italic tracking-tighter">{u.name}</h4>
+                      <p className={`text-[8px] font-black uppercase tracking-widest ${hasAccess ? 'text-rose-400' : 'text-slate-500'}`}>
+                        {hasAccess ? 'Key Issued' : 'No Access'}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handleToggleAccess(u.id)}
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                      hasAccess ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 'bg-slate-900 text-slate-500 border border-white/5'
+                    }`}
+                  >
+                    <i className={`fa-solid ${hasAccess ? 'fa-key' : 'fa-key-skeleton'}`}></i>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="p-8 text-center opacity-40">
+            <i className="fa-solid fa-shield-halved text-4xl text-slate-800 mb-4"></i>
+            <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Neural Encryption Active</p>
+          </div>
+        </div>
+      )}
 
       {selectedPhoto && (
         <div className="fixed inset-0 z-[600] bg-slate-950 p-8 flex flex-col animate-in slide-in-from-bottom duration-500">
@@ -199,7 +273,6 @@ const VaultView: React.FC<VaultViewProps> = ({ user }) => {
         </div>
       )}
 
-      {/* API Key Modal for Veo */}
       {showKeyNeeded && (
         <div className="fixed inset-0 z-[700] bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-8 animate-in fade-in zoom-in duration-300">
           <div className="w-full max-w-sm glass p-10 rounded-[4rem] border-white/10 text-center space-y-8 shadow-2xl relative overflow-hidden">

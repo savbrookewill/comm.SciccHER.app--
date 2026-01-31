@@ -10,14 +10,15 @@ const ProfileView: React.FC<{ user: User | null, onReset: () => void }> = ({ use
   if (!user) return null;
 
   const handleDeleteAccount = () => {
-    if (confirm("Privacy Compliance (CCPA/GDPR): This will permanently erase your entire ScissHER presence. Proceed?")) {
+    const confirmed = window.confirm("Privacy Compliance (CCPA/GDPR): This will permanently erase your entire ScissHER presence and biological proofs from our servers. This action is irreversible. Proceed?");
+    if (confirmed) {
+      localStorage.removeItem('scissher_verified');
       onReset();
     }
   };
 
   return (
     <div className="space-y-12 pb-40 animate-in slide-in-from-bottom-6 duration-700 px-2 relative">
-      {/* Profile Identity Header */}
       <div className="flex flex-col items-center pt-8">
         <div className="relative group">
           <div className="absolute inset-0 bg-rose-500/20 blur-[60px] rounded-full group-hover:scale-125 transition-transform duration-1000"></div>
@@ -38,7 +39,6 @@ const ProfileView: React.FC<{ user: User | null, onReset: () => void }> = ({ use
         </div>
       </div>
 
-      {/* Intentional Mantra Button */}
       <div className="px-1">
         <button 
           onClick={() => setShowMantra(true)}
@@ -55,7 +55,6 @@ const ProfileView: React.FC<{ user: User | null, onReset: () => void }> = ({ use
         </button>
       </div>
 
-      {/* Account Settings Menu */}
       <div className="space-y-6">
         <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-600 px-6 flex items-center gap-4">
            The Suite
@@ -92,15 +91,22 @@ const ProfileView: React.FC<{ user: User | null, onReset: () => void }> = ({ use
       </div>
 
       <div className="pt-8 pb-10 space-y-6 px-1">
+        <div className="flex flex-col gap-4 p-6 glass rounded-[3rem] border-white/5 bg-slate-900/40">
+           <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Legal & Compliance</h4>
+           <div className="flex flex-col gap-3">
+             <a href="#" className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-white transition-colors">Privacy Policy</a>
+             <a href="#" className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-white transition-colors">Terms of Service</a>
+             <a href="#" className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-white transition-colors">Safety Guidelines</a>
+           </div>
+        </div>
         <button onClick={onReset} className="w-full py-6 glass border border-white/5 text-slate-500 rounded-[2.5rem] font-black uppercase tracking-[0.4em] text-[10px] hover:text-white transition-all active:scale-95">
           Disconnect Presence
         </button>
-        <button onClick={handleDeleteAccount} className="w-full py-2 text-red-500/30 text-[8px] font-black uppercase tracking-[0.5em] italic">
-          Erase All Biological Proofs (CCPA)
+        <button onClick={handleDeleteAccount} className="w-full py-2 text-red-500/50 text-[8px] font-black uppercase tracking-[0.5em] italic hover:text-red-400 transition-colors">
+          Erase All Biological Proofs (CCPA/GDPR)
         </button>
       </div>
 
-      {/* Full Screen Mantra Modal */}
       {showMantra && (
         <div className="fixed inset-0 z-[600] bg-slate-950 p-10 flex flex-col items-center justify-center text-center animate-in zoom-in duration-500">
            <div className="absolute inset-0 petal-gradient opacity-10 animate-pulse"></div>
@@ -124,17 +130,33 @@ const ProfileView: React.FC<{ user: User | null, onReset: () => void }> = ({ use
         </div>
       )}
 
-      {/* Safety Modal Placeholder */}
       {showSafety && (
-        <div className="fixed inset-0 z-[600] bg-slate-950 p-10 flex flex-col animate-in slide-in-from-bottom duration-500">
+        <div className="fixed inset-0 z-[600] bg-slate-950 p-10 flex flex-col animate-in slide-in-from-bottom duration-500 overflow-y-auto no-scrollbar">
            <div className="flex justify-between items-center mb-12">
-              <h3 className="text-3xl font-black text-white tracking-tighter italic shimmer-text">Safety Suite</h3>
-              <button onClick={() => setShowSafety(false)} className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-white"><i className="fa-solid fa-xmark"></i></button>
+              <h3 className="text-3xl font-black text-white tracking-tighter italic shimmer-text leading-none">Safety Suite</h3>
+              <button onClick={() => setShowSafety(false)} className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-white active:scale-90 transition-all"><i className="fa-solid fa-xmark"></i></button>
            </div>
-           <div className="space-y-6">
-              <div className="glass p-10 rounded-[4rem] border-white/5">
-                 <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-4">Zero-Tolerance Guard</h4>
-                 <p className="text-base text-slate-300 italic font-medium leading-relaxed">ScissHER is a space for intentional connection. Harassment, neural spam, and lack of respect result in immediate, global identity bans. Interact with power.</p>
+           <div className="space-y-8">
+              <div className="glass p-10 rounded-[4rem] border-white/5 space-y-4">
+                 <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em]">Zero-Tolerance Policy</h4>
+                 <p className="text-base text-slate-300 italic font-medium leading-relaxed">ScissHER is a space for intentional connection. Harassment, neural spam, and lack of respect result in immediate, global identity bans.</p>
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] px-4">Protocols</h4>
+                <div className="space-y-3">
+                  <button className="w-full p-6 glass border border-white/5 rounded-3xl text-left flex items-center justify-between">
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Community Guidelines</span>
+                    <i className="fa-solid fa-external-link text-[10px] text-slate-700"></i>
+                  </button>
+                  <button className="w-full p-6 glass border border-white/5 rounded-3xl text-left flex items-center justify-between">
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Privacy Policy</span>
+                    <i className="fa-solid fa-external-link text-[10px] text-slate-700"></i>
+                  </button>
+                  <button className="w-full p-6 glass border border-white/5 rounded-3xl text-left flex items-center justify-between">
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Terms of Service</span>
+                    <i className="fa-solid fa-external-link text-[10px] text-slate-700"></i>
+                  </button>
+                </div>
               </div>
            </div>
         </div>

@@ -12,6 +12,7 @@ const DiscoveryView: React.FC<{ onLike: (id: string) => void }> = ({ onLike }) =
   const [showProfile, setShowProfile] = useState(false);
   const [showSeshModal, setShowSeshModal] = useState(false);
   const [aiIcebreaker, setAiIcebreaker] = useState('');
+  const [groundingLinks, setGroundingLinks] = useState<{ web?: { uri: string, title: string }, maps?: { uri: string, title: string } }[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   
   const user = MOCK_USERS[idx % MOCK_USERS.length];
@@ -25,19 +26,36 @@ const DiscoveryView: React.FC<{ onLike: (id: string) => void }> = ({ onLike }) =
     await triggerHaptic(ImpactStyle.Medium);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+      
+      // Get location for better grounding if possible
+      let latLng = undefined;
+      try {
+        const pos = await new Promise<GeolocationPosition>((res, rej) => {
+          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 });
+        });
+        latLng = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+      } catch (e) {}
+
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: `Create a unique, 1-sentence intentional "Sesh" proposal (dating icebreaker) for a lesbian dating app. 
-                   User Bio: "${user.bio}". 
-                   Interests: "${user.interests.map(i => i.items).join(', ')}". 
-                   Tone: Metropolitan, respectful, high-fashion, and specific.`,
+        model: 'gemini-3-pro-preview', // Pro for better reasoning and grounding
+        contents: `Create a unique, 1-sentence intentional date proposal for two lesbians in ${user.location}. 
+                   Target User Interests: "${user.interests.map(i => i.items).join(', ')}". 
+                   Reference real metropolitan hotspots or events near ${user.location}.`,
         config: {
-          systemInstruction: "You are ScissHER's AI Match Architect. No small talk. Only intentional proposals."
+          systemInstruction: "You are ScissHER's AI Scene Architect. You research actual local venues and events to create high-value, intentional date proposals. Do not use generic places.",
+          tools: [{ googleSearch: {} }, { googleMaps: {} }],
+          toolConfig: latLng ? { retrievalConfig: { latLng } } : undefined
         }
       });
-      setAiIcebreaker(response.text?.replace(/"/g, '') || '');
+
+      const text = response.text?.replace(/"/g, '') || '';
+      const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      
+      setAiIcebreaker(text);
+      setGroundingLinks(chunks);
       setShowSeshModal(true);
     } catch (err) {
+      console.error(err);
       setShowSeshModal(true);
     } finally {
       setIsAiLoading(false);
@@ -53,6 +71,7 @@ const DiscoveryView: React.FC<{ onLike: (id: string) => void }> = ({ onLike }) =
       setIdx(idx + 1);
       setSwipeDir(null);
       setAiIcebreaker('');
+      setGroundingLinks([]);
     }, 450);
   };
 
@@ -61,7 +80,7 @@ const DiscoveryView: React.FC<{ onLike: (id: string) => void }> = ({ onLike }) =
       <div className="flex justify-between items-end px-4">
         <div className="space-y-1">
           <h2 className="text-5xl font-black tracking-tighter shimmer-text leading-none italic">Discovery</h2>
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mt-2 opacity-80 italic">Metropolitan Intentions</p>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mt-2 opacity-70 italic">Metropolitan Intentions</p>
         </div>
         
         <button className="w-12 h-12 rounded-[1.5rem] glass flex items-center justify-center text-slate-500 border border-white/5 shadow-xl active:scale-90 transition-all">
@@ -159,6 +178,7 @@ const DiscoveryView: React.FC<{ onLike: (id: string) => void }> = ({ onLike }) =
         <SeshRequestModal 
           user={user}
           initialNote={aiIcebreaker}
+          groundingLinks={groundingLinks}
           onClose={() => setShowSeshModal(false)}
           onSubmit={(day, slot, note) => {
             handleAction('like');

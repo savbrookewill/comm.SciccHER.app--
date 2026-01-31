@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { NormalScissorsIcon } from './Header';
 
@@ -44,9 +43,17 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin, onCreateAccount }) => {
           
           <button 
             onClick={onLogin}
-            className="w-full py-5 glass border border-white/10 rounded-[2.25rem] font-black text-[10px] uppercase tracking-[0.3em] text-slate-500 hover:text-white transition-all active:scale-95"
+            className="w-full py-5 bg-white text-black rounded-[2.25rem] font-black text-[12px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-all"
           >
-            Identity Check
+            <i className="fa-brands fa-apple text-xl"></i>
+            Sign in with Apple
+          </button>
+
+          <button 
+            onClick={onLogin}
+            className="w-full py-3 text-slate-500 hover:text-white font-black text-[9px] uppercase tracking-[0.4em] transition-all"
+          >
+            Verify Biological ID
           </button>
 
           {tapCount >= 5 && (
@@ -62,7 +69,8 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin, onCreateAccount }) => {
 
         <div className="text-center opacity-40">
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-relaxed">
-            20-30 Verification Required <br/> Zero-Tolerance Safety Protocol
+            By entering, you agree to our <br/>
+            <span className="underline">Terms of Service</span> & <span className="underline">EULA</span>
           </p>
         </div>
       </div>

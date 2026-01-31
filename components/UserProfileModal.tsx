@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { User } from '../types';
 import { RoseIcon } from './Header';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 interface UserProfileModalProps {
   user: User;
@@ -14,14 +15,25 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
   const [activeGallery, setActiveGallery] = useState<'public' | 'private'>('public');
   const [showReport, setShowReport] = useState(false);
 
-  const triggerHaptic = () => {
-    // Simulated Haptic for Xcode
-    if ('vibrate' in navigator) navigator.vibrate(10);
+  // Simple mock check: let's assume if it's Elena, we have access for demo purposes
+  const internalHasAccess = hasPrivateAccess || user.id === 'u2';
+
+  const triggerHaptic = async (style: ImpactStyle) => {
+    try { await Haptics.impact({ style }); } catch (e) {}
   };
 
-  const handleReport = () => {
-    alert(`Report submitted for ${user.name}. Our safety team will review this within 24 hours.`);
+  const handleReport = async (reason: string) => {
+    await Haptics.notification({ type: NotificationType.Warning });
+    alert(`Report for "${reason}" submitted for ${user.name}. Our safety team will review this presence within 24 hours. The user has been blocked from your scene.`);
     onClose();
+  };
+
+  const handleBlock = async () => {
+    const confirmed = window.confirm(`Block ${user.name}? You will no longer catch HER light and she will not see your scene.`);
+    if (confirmed) {
+      await Haptics.notification({ type: NotificationType.Success });
+      onClose();
+    }
   };
 
   return (
@@ -32,13 +44,18 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
         <div className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl">
           <div className="sheet-grabber"></div>
           <div className="px-6 pb-4 flex items-center justify-between">
-            <button onClick={onClose} className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-slate-400 active:scale-90">
+            <button onClick={onClose} className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-slate-400 active:scale-90 transition-all">
               <i className="fa-solid fa-chevron-left"></i>
             </button>
             <h3 className="text-xl font-black tracking-tighter shimmer-text italic">{user.name}'s Scene</h3>
-            <button onClick={() => setShowReport(true)} className="w-10 h-10 rounded-xl bg-slate-900/50 flex items-center justify-center text-red-500/60 active:scale-90">
-              <i className="fa-solid fa-flag text-xs"></i>
-            </button>
+            <div className="flex gap-2">
+              <button onClick={handleBlock} className="w-10 h-10 rounded-xl bg-slate-900/50 flex items-center justify-center text-slate-600 active:scale-90 transition-all">
+                <i className="fa-solid fa-ban text-[10px]"></i>
+              </button>
+              <button onClick={() => setShowReport(true)} className="w-10 h-10 rounded-xl bg-slate-900/50 flex items-center justify-center text-red-500/60 active:scale-90 transition-all">
+                <i className="fa-solid fa-flag text-[10px]"></i>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -75,20 +92,29 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
           <div className="space-y-6">
             <div className="flex bg-slate-900/50 p-1.5 rounded-[2.5rem] border border-white/5 mx-2">
               <button onClick={() => setActiveGallery('public')} className={`flex-1 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeGallery === 'public' ? 'bg-slate-800 text-white shadow-lg' : 'text-slate-500'}`}>Public Gallery</button>
-              <button onClick={() => setActiveGallery('private')} className={`flex-1 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeGallery === 'private' ? 'bg-rose-500/10 text-rose-400 shadow-lg' : 'text-slate-500'}`}><i className="fa-solid fa-lock text-[10px]"></i> Private</button>
+              <button onClick={() => setActiveGallery('private')} className={`flex-1 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeGallery === 'private' ? 'bg-rose-500/10 text-rose-400 shadow-lg' : 'text-slate-500'}`}><i className="fa-solid fa-lock text-[10px]"></i> Private Access</button>
             </div>
             <div className="grid grid-cols-2 gap-4 px-2">
               {activeGallery === 'public' ? (
                 [user.mainPhoto, ...user.publicPhotos].map((img, i) => (
-                  <div key={i} className="aspect-square rounded-[2.5rem] overflow-hidden border border-white/5 shadow-xl"><img src={img} className="w-full h-full object-cover" /></div>
+                  <div key={i} className="aspect-square rounded-[2.5rem] overflow-hidden border border-white/5 shadow-xl transition-transform active:scale-95"><img src={img} className="w-full h-full object-cover" /></div>
+                ))
+              ) : internalHasAccess ? (
+                user.privatePhotos.map((img, i) => (
+                  <div key={i} className="aspect-square rounded-[2.5rem] overflow-hidden border border-white/5 shadow-xl transition-transform active:scale-95 relative">
+                    <img src={img} className="w-full h-full object-cover" />
+                    <div className="absolute top-3 right-3">
+                      <i className="fa-solid fa-key text-rose-400 text-[10px] drop-shadow-md"></i>
+                    </div>
+                  </div>
                 ))
               ) : (
                 <div className="col-span-2 text-center py-20 bg-slate-900/40 rounded-[3rem] border border-dashed border-white/10 space-y-4">
                   <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto text-slate-600">
                     <i className="fa-solid fa-lock text-3xl"></i>
                   </div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Vaulted Content Locked</p>
-                  <button className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Request Access</button>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Private Access Restricted</p>
+                  <button onClick={() => alert("Access request sent to " + user.name + " ✨")} className="text-[10px] font-black text-rose-400 uppercase tracking-widest active:scale-90 transition-all">Request Key</button>
                 </div>
               )}
             </div>
@@ -96,15 +122,11 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
 
           <div className="pt-10 pb-32 space-y-4">
             <button 
-              onClick={() => { triggerHaptic(); onSendPetal(); onClose(); }} 
+              onClick={() => { triggerHaptic(ImpactStyle.Heavy); onSendPetal(); onClose(); }} 
               className="w-full py-7 shimmer-btn text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.4em] shadow-[0_30px_60px_-12px_rgba(251,113,133,0.5)] flex items-center justify-center gap-4 active:scale-95 transition-all border border-white/30"
             >
               <RoseIcon className="w-8 h-8 drop-shadow-[0_0_8px_white]" color="white" />
               Send Spark
-            </button>
-            
-            <button onClick={() => setShowReport(true)} className="w-full py-4 text-[9px] font-black uppercase tracking-[0.4em] text-slate-600 hover:text-red-500 transition-colors">
-              Identity Concern? Report
             </button>
           </div>
         </div>
@@ -112,7 +134,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
 
       {showReport && (
         <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-3xl flex items-center justify-center p-8 animate-in fade-in duration-300">
-          <div className="w-full max-w-sm glass rounded-[3.5rem] p-10 space-y-8 text-center border-red-500/20 border shadow-2xl">
+          <div className="w-full max-sm glass rounded-[3.5rem] p-10 space-y-8 text-center border-red-500/20 border shadow-2xl">
             <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 mx-auto border border-red-500/20 shadow-xl">
               <i className="fa-solid fa-flag text-2xl"></i>
             </div>
@@ -121,8 +143,8 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, onClose, onSe
               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.4em]">Intentionality Check</p>
             </div>
             <div className="grid grid-cols-1 gap-2 text-left">
-              {['Harassment', 'Not 20-30 Range', 'Neural Spam', 'Underage'].map((reason) => (
-                <button key={reason} onClick={handleReport} className="w-full p-4 glass border border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:border-red-500/40 hover:text-white transition-all active:scale-95">
+              {['Harassment', 'Inappropriate Photos', 'Fake Account', 'Underage'].map((reason) => (
+                <button key={reason} onClick={() => handleReport(reason)} className="w-full p-4 glass border border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:border-red-500/40 hover:text-white transition-all active:scale-95">
                   {reason}
                 </button>
               ))}

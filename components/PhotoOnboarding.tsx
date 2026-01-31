@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 
 interface PhotoItem {
   id: string;
@@ -15,6 +15,7 @@ interface PhotoOnboardingProps {
 const PhotoOnboarding: React.FC<PhotoOnboardingProps> = ({ onComplete }) => {
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [acceptedEula, setAcceptedEula] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -51,11 +52,10 @@ const PhotoOnboarding: React.FC<PhotoOnboardingProps> = ({ onComplete }) => {
     });
   };
 
-  const isReady = photos.length >= 3; 
+  const isReady = photos.length >= 3 && acceptedEula; 
 
   const handleSubmit = () => {
     if (!isReady) return;
-    // Reorder to put lead photo first
     const sorted = [...photos].sort((a, b) => (a.isLead ? -1 : b.isLead ? 1 : 0));
     const publicUrls = sorted.filter(p => !p.isPrivate).map(p => p.url);
     const privateUrls = sorted.filter(p => p.isPrivate).map(p => p.url);
@@ -77,7 +77,7 @@ const PhotoOnboarding: React.FC<PhotoOnboardingProps> = ({ onComplete }) => {
 
       <div className="w-full max-w-xs space-y-8 relative z-10">
         <div className="grid grid-cols-6 gap-3 auto-rows-[100px]">
-          {photos.map((photo, idx) => (
+          {photos.map((photo) => (
             <div 
               key={photo.id} 
               className={`relative rounded-[2rem] overflow-hidden border transition-all duration-500 shadow-2xl group ${
@@ -121,15 +121,15 @@ const PhotoOnboarding: React.FC<PhotoOnboardingProps> = ({ onComplete }) => {
           </label>
         </div>
 
-        <div className="flex items-center justify-between px-2">
-           <div className="flex gap-1.5">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className={`h-1.5 rounded-full transition-all duration-700 ${i < photos.length ? 'w-8 bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'w-4 bg-slate-800'}`}></div>
-              ))}
-           </div>
-           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-              {photos.length}/3 Launch Ready
-           </span>
+        <div className="glass p-6 rounded-[2.5rem] border-white/10 space-y-4">
+          <div className="flex items-start gap-4 cursor-pointer" onClick={() => setAcceptedEula(!acceptedEula)}>
+            <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${acceptedEula ? 'bg-emerald-500 border-emerald-400' : 'border-slate-700 bg-slate-900'}`}>
+              {acceptedEula && <i className="fa-solid fa-check text-white text-[10px]"></i>}
+            </div>
+            <p className="text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-widest">
+              I accept the <span className="text-white">Community Standards</span> & <span className="text-white">EULA</span>. I agree to zero-tolerance for harassment or abuse.
+            </p>
+          </div>
         </div>
 
         <div className="pt-4 space-y-4">
